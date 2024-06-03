@@ -21,5 +21,6 @@ namespace Domain.Contracts
         string DocumentCoverText();
         string FarewellIncomplete();
         string FarewellFinish();
+        string ErrorMessage();
     }
 }
