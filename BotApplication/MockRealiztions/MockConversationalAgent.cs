@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Contracts;
+using Domain.Data;
 
 namespace MockRealiztions
 {
@@ -19,9 +20,9 @@ namespace MockRealiztions
             return "Provide your passport photo one more time, please";
         }
 
-        public string AskForPassportApprove(object someData)
+        public string AskForPassportApprove(PassportData data)
         {
-            return "Check if your passport data is ok";
+            return $"Check if your passport data is ok. Name is {data.Name}. Id is {data.Id}";
         }
 
         public string AskForVenichleId()
@@ -34,9 +35,9 @@ namespace MockRealiztions
             return "Provide your venichle id photo one more time, please";
         }
 
-        public string AskForVenichleIdApprove(object someData)
+        public string AskForVenichleIdApprove(VenicleIdData data)
         {
-            return "Check if your venichle id data is ok";
+            return $"Check if your venichle id data is ok. Name is {data.Name}. Id is {data.Id}";
         }
 
         public string DocumentCoverText()

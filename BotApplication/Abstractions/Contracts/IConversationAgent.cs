@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,12 +11,11 @@ namespace Domain.Contracts
     {
         string Greet();
         string AskForPassport();
-        string AskForPassportApprove(object someData);
+        string AskForPassportApprove(PassportData data);
         string AskForPassportAgain();
         string AskForVenichleId();
-        string AskForVenichleIdApprove(object someData);
+        string AskForVenichleIdApprove(VenicleIdData data);
         string AskForVenichleIdAgain();
-
         string PriceAnnouncement();
         string RejectingPriceReaction();
         string DocumentCoverText();
