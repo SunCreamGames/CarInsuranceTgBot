@@ -58,3 +58,14 @@ static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exce
 
     return Task.CompletedTask;
 }
+
+
+public enum ProcessStage
+{
+    None,
+    WaitingForPassportPhoto,
+    WaitingForPassportDataApprove,
+    WaitingForVenichleIdPhoto,
+    WaitingForVenichleIdDataApprove,
+    WaitingForPriceConfirmation,
+}
