@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotApplication", "BotApplication\BotApplication.csproj", "{EABCA3C6-8E5E-419B-A2CF-D9F27FAB6680}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotApplication", "BotApplication\BotApplication.csproj", "{EABCA3C6-8E5E-419B-A2CF-D9F27FAB6680}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abstractions", "Abstractions\Abstractions.csproj", "{8697D255-0B24-4316-9B6F-281FFBD22937}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Abstractions\Domain.csproj", "{8697D255-0B24-4316-9B6F-281FFBD22937}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockRealiztions", "MockRealiztions\MockRealiztions.csproj", "{61EB1A9F-B175-4D2E-9139-09FB9CC0284B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MockRealiztions", "MockRealiztions\MockRealiztions.csproj", "{61EB1A9F-B175-4D2E-9139-09FB9CC0284B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

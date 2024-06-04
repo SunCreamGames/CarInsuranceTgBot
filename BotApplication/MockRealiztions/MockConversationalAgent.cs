@@ -44,7 +44,6 @@ namespace MockRealiztions
         {
             return "Here is your insurance policy docunent.";
         }
-
         public string FarewellFinish()
         {
             return "We were happy to help you. Hope you are satisfied with our service. Have a nice day!";
@@ -68,5 +67,11 @@ namespace MockRealiztions
         {
             return "We are really sorry to hear that. But $100 is the only available price to create an insurance document. In case you changed your ming click 'I've changed my mind' to procced a payment and get your document. If not, click 'no' button.";
         }
+
+        public string ErrorMessage()
+        {
+            return "Oops, something unexpected happened. Try again";
+        }
+
     }
 }
