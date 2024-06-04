@@ -1,4 +1,5 @@
-﻿using Domain.Data;
+﻿using BotApplication;
+using Domain.Data;
 
 public class ChatData
 {

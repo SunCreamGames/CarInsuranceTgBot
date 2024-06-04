@@ -17,7 +17,7 @@ namespace MockRealiztions
 
         public string AskForPassportAgain()
         {
-            return "Provide your passport photo one more time, please";
+            return "It is hard to extract data from provided photo. Send another passport photo, please. And make sure it is good.";
         }
 
         public string AskForPassportApprove(PassportData data)

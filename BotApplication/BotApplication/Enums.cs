@@ -17,12 +17,8 @@ namespace BotApplication
     }
     public enum InlineReplies
     {
-        PassportConfirm,
-        PassportUnconfirm,
-        VenichleIdConfirm,
-        VenichleIdUnconfirm,
-        PriceConfirm,
-        PriceUnconfirm
+        Confirm,
+        Unconfirm,
     }
 
 }

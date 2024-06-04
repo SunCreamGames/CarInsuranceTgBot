@@ -53,17 +53,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     var msg = update.Message;
     var callBack = update.CallbackQuery;
 
+    // Process button answer 'yes' or 'no' in confirmation steps
     if (callBack != null)
     {
-
         chatId = callBack.Message.Chat.Id;
         if (!chats.ContainsKey(chatId))
             throw new Exception("Got callback data from inline answer from unregistered chat");
 
         chatData = chats[chatId];
         await ProcessReply(chatData, callBack, botClient, cts.Token);
+        return;
     }
-
 
     chatId = update.Message.Chat.Id;
     if (msg == null)
@@ -83,25 +83,54 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
 async Task ProcessReply(ChatData chatData, CallbackQuery callBack, ITelegramBotClient botClient, CancellationToken token)
 {
-
     bool parsingSuccess = Enum.TryParse(typeof(InlineReplies), callBack.Data, out var commandId);
     if (!parsingSuccess)
         throw new Exception($"Could not parse callback data to inline replies. Callback data : {callBack.Data}");
 
-    switch ((InlineReplies)commandId)
+    var replyCommand = (InlineReplies)commandId;
+
+    var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
+
+    switch (chatData.Stage)
     {
-        case InlineReplies.PassportConfirm:
+        case ProcessStage.WaitingForPassportDataApprove:
+            if (replyCommand == InlineReplies.Confirm)
+            {
+                chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
+                await botClient.SendTextMessageAsync(
+                    chatData.ChatId,
+                    conversationalAgent.AskForVenichleId());
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(
+                    chatData.ChatId,
+                    conversationalAgent.AskForPassportAgain());
+            }
             break;
-        case InlineReplies.PassportUnconfirm:
+        case ProcessStage.WaitingForVenichleIdPhoto:
+            if (replyCommand == InlineReplies.Confirm)
+            {
+                chatData.Stage = ProcessStage.WaitingForPriceConfirmation;
+                await botClient.SendTextMessageAsync(
+                    chatData.ChatId,
+                    conversationalAgent.PriceAnnouncement());
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(
+                    chatData.ChatId,
+                    conversationalAgent.AskForPassportAgain());
+            }
             break;
-        case InlineReplies.VenichleIdConfirm:
             break;
-        case InlineReplies.VenichleIdUnconfirm:
+        case ProcessStage.WaitingForVenichleIdDataApprove:
             break;
-        case InlineReplies.PriceConfirm:
+        case ProcessStage.WaitingForPriceConfirmation:
             break;
-        case InlineReplies.PriceUnconfirm:
-            break;
+
+        default:
+            throw new();
     }
 
 }
@@ -192,8 +221,8 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
     }
     chatData.PassportData = passportData;
 
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.PassportConfirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.PassportConfirm.ToString());
+    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.Confirm.ToString());
+    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.Confirm.ToString());
 
     await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForPassportApprove(passportData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
 
@@ -225,8 +254,8 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
     }
     chatData.VenicleIdData = venichleIdData;
 
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.PassportConfirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.PassportConfirm.ToString());
+    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.Confirm.ToString());
+    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.Confirm.ToString());
 
     await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForVenichleIdApprove(venichleIdData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
 
@@ -235,22 +264,27 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
 
 static async Task ReAskForPassportDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.ErrorMessage());
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.PassportConfirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.PassportUnconfirm.ToString());
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForPassportApprove(chatData.PassportData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
+    var errorText = conversationalAgent.ErrorMessage();
+    var reAskText = conversationalAgent.AskForPassportApprove(chatData.PassportData);
+    await ReAskGeneric(chatData, botClient, errorText, reAskText);
 }
 static async Task ReAskForVenichleIdDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.ErrorMessage());
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.VenichleIdConfirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.VenichleIdUnconfirm.ToString());
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForVenichleIdApprove(chatData.VenicleIdData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
+    var errorText = conversationalAgent.ErrorMessage();
+    var reAskText = conversationalAgent.AskForVenichleIdApprove(chatData.VenicleIdData);
+    await ReAskGeneric(chatData, botClient, errorText, reAskText);
 }
 static async Task ReAskForPriceApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.ErrorMessage());
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.PriceConfirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.PriceUnconfirm.ToString());
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.PriceAnnouncement(), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
+    var errorText = conversationalAgent.ErrorMessage();
+    var reAskText = conversationalAgent.PriceAnnouncement();
+    await ReAskGeneric(chatData, botClient, errorText, reAskText);
+}
+
+static async Task ReAskGeneric(ChatData chatData, ITelegramBotClient botClient, string errorText, string reAskText)
+{
+    await botClient.SendTextMessageAsync(chatData.ChatId, errorText);
+    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.Confirm.ToString());
+    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.Unconfirm.ToString());
+    await botClient.SendTextMessageAsync(chatData.ChatId, reAskText, replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
 }
