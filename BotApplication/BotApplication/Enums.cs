@@ -13,7 +13,7 @@ namespace BotApplication
         WaitingForPassportDataApprove,
         WaitingForVenichleIdPhoto,
         WaitingForVenichleIdDataApprove,
-        WaitingForPriceConfirmation,
+        WaitingForPriceApprove,
     }
     public enum InlineReplies
     {
