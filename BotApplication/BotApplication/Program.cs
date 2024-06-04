@@ -119,7 +119,7 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                 await AskGeneric(chatData.ChatId, botClient, conversationalAgent.PriceAnnouncement());
             }
             else
-            {
+            { 
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
                     conversationalAgent.PriceAnnouncement());

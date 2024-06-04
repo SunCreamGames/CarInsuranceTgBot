@@ -9,7 +9,7 @@ namespace Domain.Contracts
 {
     public interface IPictureProcessor
     {
-        PassportData ProcessPassportPicture(object someData);
-        VenicleIdData ProcessVenichleIdPicture(object someData);
+        Task<PassportData> ProcessPassportPicture(byte[] fileData);
+        Task<VenicleIdData> ProcessVenichleIdPicture(byte[] fileData);
     }
 }

@@ -10,22 +10,22 @@ namespace MockRealiztions
 {
     public class MockPictureProcessor : IPictureProcessor
     {
-        public PassportData ProcessPassportPicture(object someData)
+        public Task<PassportData> ProcessPassportPicture(byte[] someData)
         {
-            return new PassportData
+            return Task.Run(() => new PassportData
             {
                 Name = "Name",
                 Id = "ID"
-            };
+            });
         }
 
-        public VenicleIdData ProcessVenichleIdPicture(object someData)
+        public Task<VenicleIdData> ProcessVenichleIdPicture(byte[] someData)
         {
-            return new VenicleIdData
+            return Task.Run(() => new VenicleIdData
             {
                 Name = "Name",
                 Id = "ID"
-            };
+            });
         }
     }
 }
