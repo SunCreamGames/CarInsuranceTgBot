@@ -21,22 +21,23 @@ namespace OpenAiClient
 
         });
 
+        string systemMsg = "You are chat-bot assistant for online creating car insurance policy. \r\nYou get instructions what to do on every request. Your purpose is to guide me though pipeline friendly. Each step you will have instuctions how to do that. Next request should be responded as you are responding to me as customer. So it gives instructions, how to communicate. Remember : You can't ask client questions like \"How can i help you?\" and other, just giving instructions and requests as its final version customer will get";
         public async Task Init()
         {
-            var msg = "You are chat-bot assistant for online creating car insurance policy. \r\nYou get instructions what to do on every request. Just guide client though pipeline friendly. Each step you will have instuctions how to do that. Do not start with this request. It's instructions only for future. Every next request should be responded as you are responding to client. So it gives instructions, how to communicate. Remember : You can't ask client questions like \"How can i help you?\" and other, just giving instructions and requests";
-            
+
+
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
                 new ChatCompletionCreateRequest()
                 {
                     Model = Gpt_4o,
-                    Messages = new List<ChatMessage>() { new ChatMessage("system", msg) }
+                    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg) }
                 },
                 modelId: "gpt-4o");
         }
 
         public async Task<string> Greet()
         {
-            var msg = "Greet the client and descripe purpose of chat-bot";
+            var msg = "Greet the client and descripe purpose of chat-bot.Remember : You can't ask client questions like \"How can i help you?\" and other, just giving instructions and requests";
 
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
                 new ChatCompletionCreateRequest()
@@ -53,13 +54,13 @@ namespace OpenAiClient
         }
         public async Task<string> AskForPassport()
         {
-            var msg = "Ask client for passport photo with good illumination and all fields visible";
+            var msg = "Request for passport photo with good illumination and all fields visible";
 
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
                new ChatCompletionCreateRequest()
                {
                    Model = Gpt_4o,
-                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                   Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                },
                modelId: "gpt-4o");
 
@@ -77,7 +78,7 @@ namespace OpenAiClient
                new ChatCompletionCreateRequest()
                {
                    Model = Gpt_4o,
-                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                   Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                },
                modelId: "gpt-4o");
 
@@ -96,7 +97,7 @@ namespace OpenAiClient
                 new ChatCompletionCreateRequest()
                 {
                     Model = Gpt_4o,
-                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                 },
                 modelId: "gpt-4o");
 
@@ -117,7 +118,7 @@ namespace OpenAiClient
                 new ChatCompletionCreateRequest()
                 {
                     Model = Gpt_4o,
-                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                 },
                 modelId: "gpt-4o");
 
@@ -138,7 +139,7 @@ namespace OpenAiClient
 new ChatCompletionCreateRequest()
 {
     Model = Gpt_4o,
-    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
 },
 modelId: "gpt-4o");
 
@@ -156,7 +157,7 @@ modelId: "gpt-4o");
                 new ChatCompletionCreateRequest()
                 {
                     Model = Gpt_4o,
-                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                 },
                 modelId: "gpt-4o");
 
@@ -175,7 +176,7 @@ modelId: "gpt-4o");
                new ChatCompletionCreateRequest()
                {
                    Model = Gpt_4o,
-                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                   Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                },
                modelId: "gpt-4o");
 
@@ -194,7 +195,7 @@ modelId: "gpt-4o");
               new ChatCompletionCreateRequest()
               {
                   Model = Gpt_4o,
-                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                  Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
               },
               modelId: "gpt-4o");
 
@@ -216,7 +217,7 @@ modelId: "gpt-4o");
               new ChatCompletionCreateRequest()
               {
                   Model = Gpt_4o,
-                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                  Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
               },
               modelId: "gpt-4o");
 
@@ -237,7 +238,7 @@ modelId: "gpt-4o");
               new ChatCompletionCreateRequest()
               {
                   Model = Gpt_4o,
-                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                  Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
               },
               modelId: "gpt-4o");
 
@@ -258,7 +259,7 @@ modelId: "gpt-4o");
               new ChatCompletionCreateRequest()
               {
                   Model = Gpt_4o,
-                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                  Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
               },
               modelId: "gpt-4o");
 
