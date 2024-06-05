@@ -9,18 +9,18 @@ namespace Domain.Contracts
 {
     public interface IConversationAgent
     {
-        string Greet();
-        string AskForPassport();
-        string AskForPassportApprove(PassportData data);
-        string AskForPassportAgain();
-        string AskForVenichleId();
-        string AskForVenichleIdApprove(VeniclePlateData data);
-        string AskForVenichleIdAgain();
-        string PriceAnnouncement();
-        string RejectingPriceReaction();
-        string DocumentCoverText();
-        string FarewellIncomplete();
-        string FarewellFinish();
-        string ErrorMessage();
+        Task Init();
+        Task<string> Greet();
+        Task<string> AskForPassport();
+        Task<string> AskForPassportApprove(PassportData data);
+        Task<string> AskForWaitWhileProcessing();
+        Task<string> AskForPassportAgain();
+        Task<string> AskForVenichleId();
+        Task<string> AskForVenichleIdApprove(VeniclePlateData data);
+        Task<string> AskForVenichleIdAgain();
+        Task<string> PriceAnnouncement(int price);
+        Task<string> RejectingPriceReaction(int price);
+        Task<string> DocumentCoverText();
+        Task<string> IncorrectInputHandle();
     }
 }

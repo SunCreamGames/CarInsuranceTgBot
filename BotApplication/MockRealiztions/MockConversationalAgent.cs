@@ -10,68 +10,80 @@ namespace MockRealiztions
 {
     public class MockConversationalAgent : IConversationAgent
     {
-        public string AskForPassport()
+        public Task<string> AskForPassport()
         {
-            return "Provide your passport photo, please";
+            return Task.Run(() => "Provide your passport photo, please");
         }
 
-        public string AskForPassportAgain()
+        public Task<string> AskForPassportAgain()
         {
-            return "It is hard to extract data from provided photo. Send another passport photo, please. And make sure it is good.";
+            return Task.Run(() => "It is hard to extract data from provided photo. Send another passport photo, please. And make sure it is good.");
         }
 
-        public string AskForPassportApprove(PassportData data)
+        public Task<string> AskForPassportApprove(PassportData data)
         {
-            return $"Check if your passport data is ok. Name is {data.Name}. Id is {data.Id}";
+            return Task.Run(() => $"Check if your passport data is ok. Name is {data.Name}. Id is {data.Id}");
         }
 
-        public string AskForVenichleId()
+        public Task<string> AskForVenichleId()
         {
-            return "Provide your venichle id photo, please";
+            return Task.Run(() => "Provide your venichle id photo, please");
         }
 
-        public string AskForVenichleIdAgain()
+        public Task<string> AskForVenichleIdAgain()
         {
-            return "Provide your venichle id photo one more time, please";
+            return Task.Run(() => "Provide your venichle id photo one more time, please");
         }
 
-        public string AskForVenichleIdApprove(VeniclePlateData data)
+        public Task<string> AskForVenichleIdApprove(VeniclePlateData data)
         {
-            return $"Check if your venichle id data is ok. Id is {data.Id}";
+            return Task.Run(() => $"Check if your venichle id data is ok. Id is {data.Id}");
         }
 
-        public string DocumentCoverText()
+        public Task<string> DocumentCoverText()
         {
-            return "Here is your insurance policy docunent.";
+            return Task.Run(() => "Here is your insurance policy docunent.");
         }
-        public string FarewellFinish()
+        public Task<string> FarewellFinish()
         {
-            return "We were happy to help you. Hope you are satisfied with our service. Have a nice day!";
+            return Task.Run(() => "We were happy to help you. Hope you are satisfied with our service. Have a nice day!");
         }
-        public string FarewellIncomplete()
+        public Task<string> FarewellIncomplete()
         {
-            return "Ok then. You can always come back to create an insurance policy dociument in case you will change your ming. Have a nice day!";
-        }
-
-        public string Greet()
-        {
-            return "Hello, this is the bot to create a car insurance policy document, using your passport and venichle id document.";
+            return Task.Run(() => "Ok then. You can always come back to create an insurance policy dociument in case you will change your ming. Have a nice day!");
         }
 
-        public string PriceAnnouncement()
+        public Task<string> Greet()
         {
-            return "Creating car insurance policy document costs $100. If you agreed with this price, that click \'continue button\' to procced a payment and get your document. If not, click \'no\' button.";
+            return Task.Run(() => "Hello, this is the bot to create a car insurance policy document, using your passport and venichle id document.");
         }
 
-        public string RejectingPriceReaction()
+        public Task<string> PriceAnnouncement(int price)
         {
-            return "We are really sorry to hear that. But $100 is the only available price to create an insurance document. In case you changed your ming click 'I've changed my mind' to procced a payment and get your document. If not, click 'no' button.";
+            return Task.Run(() => $"Creating car insurance policy document costs ${price}. If you agreed with this price, that click \'continue button\' to procced a payment and get your document. If not, click \'no\' button.");
         }
 
-        public string ErrorMessage()
+        public Task<string> RejectingPriceReaction(int price)
         {
-            return "Oops, something unexpected happened. Try again";
+            return Task.Run(() => $"We are really sorry to hear that. But ${price} is the only available price to create an insurance document. In case you changed your ming click 'I've changed my mind' to procced a payment and get your document. If not, click 'no' button.");
         }
 
+
+        public Task<string> AskForWaitWhileProcessing()
+        {
+            return Task.Run(() => "Wait a minute, we are processing your photo");
+
+        }
+
+
+        public Task<string> IncorrectInputHandle()
+        {
+            return Task.Run(() => "Oops, something unexpected happened. Try again");
+        }
+
+        public Task Init()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

@@ -4,6 +4,7 @@ using Domain.Data;
 using Microsoft.Extensions.DependencyInjection;
 using MindeePictureProcessing;
 using MockRealiztions;
+using OpenAiClient;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -24,6 +25,9 @@ ReceiverOptions receiverOptions = new()
     AllowedUpdates = Array.Empty<UpdateType>()
 };
 
+var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
+await conversationalAgent.Init();
+
 async Task ProcessInlineKeyboardAnswer(string arg1, string? arg2, bool? nullable1, string? arg4, int? nullable2, CancellationToken token)
 {
     throw new NotImplementedException();
@@ -41,13 +45,18 @@ Console.ReadLine();
 static IServiceProvider ConfigureServices()
 {
     var services = new ServiceCollection();
-    services.AddSingleton<IConversationAgent, MockConversationalAgent>();
+    //services.AddSingleton<IConversationAgent, MockConversationalAgent>();
     services.AddSingleton<IPictureProcessor, MockPictureProcessor>();
-    //services.AddSingleton<IPictureProcessor, MindeePictureProcessor>();
-    services.AddSingleton<ILogger, ConsoleLogger>();
     services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
+
+    services.AddSingleton<IConversationAgent, OpenAiConversationalAgent>();
+    //services.AddSingleton<IPictureProcessor, MindeePictureProcessor>();
+    //services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
+
+    services.AddSingleton<ILogger, ConsoleLogger>();
     return services.BuildServiceProvider();
 }
+
 async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
 {
     long chatId;
@@ -93,8 +102,6 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
     var replyCommand = (InlineReplies)commandId;
 
     var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
-    var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
-
 
     var replyMarkUpWitoutButtons = new InlineKeyboardMarkup(new List<InlineKeyboardButton>());
     await botClient.EditMessageTextAsync(chatData.ChatId, callBack.Message.MessageId, callBack.Message.Text, replyMarkup: replyMarkUpWitoutButtons);
@@ -107,13 +114,13 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                 chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                    conversationalAgent.AskForVenichleId());
+                   await conversationalAgent.AskForVenichleId());
             }
             else
             {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                    conversationalAgent.AskForPassportAgain());
+                  await conversationalAgent.AskForPassportAgain());
                 chatData.Stage = ProcessStage.WaitingForPassportPhoto;
             }
             break;
@@ -121,13 +128,13 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
             if (replyCommand == InlineReplies.Confirm)
             {
                 chatData.Stage = ProcessStage.WaitingForPriceApprove;
-                await AskGeneric(chatData.ChatId, botClient, conversationalAgent.PriceAnnouncement());
+                await AskGeneric(chatData.ChatId, botClient, await conversationalAgent.PriceAnnouncement(100));
             }
             else
             {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                    conversationalAgent.AskForVenichleIdAgain());
+                   await conversationalAgent.AskForVenichleIdAgain());
                 chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
 
             }
@@ -149,7 +156,7 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
             {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                    conversationalAgent.AskForPassportAgain());
+await conversationalAgent.RejectingPriceReaction(100));
             }
             break;
         default: return;
@@ -159,7 +166,6 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
 
 async Task ProcessCurrentStep(ChatData chatData, Message msg, ITelegramBotClient botClient, CancellationToken cancellationToken)
 {
-    var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
     var picProcessAgent = serviceProvider.GetRequiredService<IPictureProcessor>();
 
     string photoId, filePath;
@@ -213,16 +219,16 @@ Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, 
 
 static async Task BotStartConversation(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.Greet());
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForPassport());
+    await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.Greet());
+    await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForPassport());
     chatData.Stage = ProcessStage.WaitingForPassportPhoto;
 }
 static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, CancellationToken cancellationToken)
 {
     if (msg.Photo == null)
     {
-        await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.ErrorMessage());
-        await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForPassport());
+        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.IncorrectInputHandle());
+        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForPassport());
         return;
     } // TODO : Change errors to more conditional depends on stage.
 
@@ -243,7 +249,7 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
     }
     chatData.PassportData = passportData;
 
-    await AskGeneric(chatData.ChatId, botClient, conversationalAgent.AskForPassportApprove(passportData));
+    await AskGeneric(chatData.ChatId, botClient, await conversationalAgent.AskForPassportApprove(passportData));
 
     chatData.Stage = ProcessStage.WaitingForPassportDataApprove;
 }
@@ -251,8 +257,8 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
 {
     if (msg.Photo == null)
     {
-        await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.ErrorMessage());
-        await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForVenichleId());
+        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.IncorrectInputHandle());
+        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForVenichleId());
         return;
     } // TODO : Change errors to more conditional depends on stage.
 
@@ -273,27 +279,27 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
     }
     chatData.VenicleIdData = venichleIdData;
 
-    await AskGeneric(chatData.ChatId, botClient, conversationalAgent.AskForVenichleIdApprove(venichleIdData));
+    await AskGeneric(chatData.ChatId, botClient, await conversationalAgent.AskForVenichleIdApprove(venichleIdData));
 
     chatData.Stage = ProcessStage.WaitingForVenichleIdDataApprove;
 }
 
 static async Task ReAskForPassportDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    var errorText = conversationalAgent.ErrorMessage();
-    var reAskText = conversationalAgent.AskForPassportApprove(chatData.PassportData);
+    var errorText = await conversationalAgent.IncorrectInputHandle();
+    var reAskText = await conversationalAgent.AskForPassportApprove(chatData.PassportData);
     await ReAskGeneric(chatData.ChatId, botClient, errorText, reAskText);
 }
 static async Task ReAskForVenichleIdDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    var errorText = conversationalAgent.ErrorMessage();
-    var reAskText = conversationalAgent.AskForVenichleIdApprove(chatData.VenicleIdData);
+    var errorText = await conversationalAgent.IncorrectInputHandle();
+    var reAskText = await conversationalAgent.AskForVenichleIdApprove(chatData.VenicleIdData);
     await ReAskGeneric(chatData.ChatId, botClient, errorText, reAskText);
 }
 static async Task ReAskForPriceApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
-    var errorText = conversationalAgent.ErrorMessage();
-    var reAskText = conversationalAgent.PriceAnnouncement();
+    var errorText = await conversationalAgent.IncorrectInputHandle();
+    var reAskText = await conversationalAgent.PriceAnnouncement(100);
     await ReAskGeneric(chatData.ChatId, botClient, errorText, reAskText);
 }
 
