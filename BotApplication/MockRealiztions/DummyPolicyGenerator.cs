@@ -10,7 +10,7 @@ namespace MockRealiztions
 {
     public class DummyPolicyGenerator : IPolicyGenerator
     {
-        Task<byte[]> IPolicyGenerator.CreateNewPolicy(PassportData passportData, VenicleIdData venicleIdData)
+        Task<byte[]> IPolicyGenerator.CreateNewPolicy(PassportData passportData, VeniclePlateData venicleIdData)
         {
             return Task.Run(() => File.ReadAllBytes("dummy.pdf"));
         }

@@ -1,8 +1,7 @@
 ﻿namespace Domain.Data
 {
-    public class VenicleIdData
+    public class VeniclePlateData
     {
-        public string Name { get; set; }
         public string Id { get; set; }
     }
 }

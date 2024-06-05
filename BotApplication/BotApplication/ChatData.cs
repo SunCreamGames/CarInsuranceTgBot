@@ -7,5 +7,5 @@ public class ChatData
     public ProcessStage Stage { get; set; }
 
     public PassportData? PassportData { get; set; }
-    public VenicleIdData? VenicleIdData { get; set; }
+    public VeniclePlateData? VenicleIdData { get; set; }
 }

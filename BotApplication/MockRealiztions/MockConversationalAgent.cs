@@ -35,9 +35,9 @@ namespace MockRealiztions
             return "Provide your venichle id photo one more time, please";
         }
 
-        public string AskForVenichleIdApprove(VenicleIdData data)
+        public string AskForVenichleIdApprove(VeniclePlateData data)
         {
-            return $"Check if your venichle id data is ok. Name is {data.Name}. Id is {data.Id}";
+            return $"Check if your venichle id data is ok. Id is {data.Id}";
         }
 
         public string DocumentCoverText()

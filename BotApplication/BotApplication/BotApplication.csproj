@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MindeeClient\MindeePictureProcessing.csproj" />
     <ProjectReference Include="..\MockRealiztions\MockRealiztions.csproj" />
+    <ProjectReference Include="..\OpenAiClient\OpenAiClient.csproj" />
   </ItemGroup>
 
 </Project>

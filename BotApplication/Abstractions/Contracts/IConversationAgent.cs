@@ -14,7 +14,7 @@ namespace Domain.Contracts
         string AskForPassportApprove(PassportData data);
         string AskForPassportAgain();
         string AskForVenichleId();
-        string AskForVenichleIdApprove(VenicleIdData data);
+        string AskForVenichleIdApprove(VeniclePlateData data);
         string AskForVenichleIdAgain();
         string PriceAnnouncement();
         string RejectingPriceReaction();

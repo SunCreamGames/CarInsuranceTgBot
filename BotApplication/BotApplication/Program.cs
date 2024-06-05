@@ -2,9 +2,8 @@
 using Domain.Contracts;
 using Domain.Data;
 using Microsoft.Extensions.DependencyInjection;
+using MindeePictureProcessing;
 using MockRealiztions;
-using System.IO;
-using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -44,6 +43,7 @@ static IServiceProvider ConfigureServices()
     var services = new ServiceCollection();
     services.AddSingleton<IConversationAgent, MockConversationalAgent>();
     services.AddSingleton<IPictureProcessor, MockPictureProcessor>();
+    //services.AddSingleton<IPictureProcessor, MindeePictureProcessor>();
     services.AddSingleton<ILogger, ConsoleLogger>();
     services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
     return services.BuildServiceProvider();
@@ -95,6 +95,10 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
     var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
     var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
 
+
+    var replyMarkUpWitoutButtons = new InlineKeyboardMarkup(new List<InlineKeyboardButton>());
+    await botClient.EditMessageTextAsync(chatData.ChatId, callBack.Message.MessageId, callBack.Message.Text, replyMarkup: replyMarkUpWitoutButtons);
+
     switch (chatData.Stage)
     {
         case ProcessStage.WaitingForPassportDataApprove:
@@ -110,6 +114,7 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
                     conversationalAgent.AskForPassportAgain());
+                chatData.Stage = ProcessStage.WaitingForPassportPhoto;
             }
             break;
         case ProcessStage.WaitingForVenichleIdDataApprove:
@@ -119,10 +124,12 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                 await AskGeneric(chatData.ChatId, botClient, conversationalAgent.PriceAnnouncement());
             }
             else
-            { 
+            {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                    conversationalAgent.PriceAnnouncement());
+                    conversationalAgent.AskForVenichleIdAgain());
+                chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
+
             }
             break;
         case ProcessStage.WaitingForPriceApprove:
@@ -145,9 +152,7 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                     conversationalAgent.AskForPassportAgain());
             }
             break;
-
-        default:
-            throw new();
+        default: return;
     }
 
 }
@@ -234,14 +239,11 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
             destination: fileStream,
             cancellationToken: cancellationToken);
 
-        passportData = picProcessAgent.ProcessPassportPicture(fileStream);
+        passportData = await picProcessAgent.ProcessPassportPicture(fileStream.GetBuffer());
     }
     chatData.PassportData = passportData;
 
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.Confirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.Confirm.ToString());
-
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForPassportApprove(passportData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
+    await AskGeneric(chatData.ChatId, botClient, conversationalAgent.AskForPassportApprove(passportData));
 
     chatData.Stage = ProcessStage.WaitingForPassportDataApprove;
 }
@@ -259,7 +261,7 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
     var fileInfo = await botClient.GetFileAsync(photoId);
     var path = fileInfo.FilePath;
 
-    VenicleIdData venichleIdData;
+    VeniclePlateData venichleIdData;
     using (var fileStream = new MemoryStream())
     {
         await botClient.DownloadFileAsync(
@@ -267,14 +269,11 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
             destination: fileStream,
             cancellationToken: cancellationToken);
 
-        venichleIdData = picProcessAgent.ProcessVenichleIdPicture(fileStream);
+        venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
     }
     chatData.VenicleIdData = venichleIdData;
 
-    var acceptButton = InlineKeyboardButton.WithCallbackData("Yes", InlineReplies.Confirm.ToString());
-    var rejectButton = InlineKeyboardButton.WithCallbackData("No", InlineReplies.Confirm.ToString());
-
-    await botClient.SendTextMessageAsync(chatData.ChatId, conversationalAgent.AskForVenichleIdApprove(venichleIdData), replyMarkup: new InlineKeyboardMarkup([acceptButton, rejectButton]));
+    await AskGeneric(chatData.ChatId, botClient, conversationalAgent.AskForVenichleIdApprove(venichleIdData));
 
     chatData.Stage = ProcessStage.WaitingForVenichleIdDataApprove;
 }
