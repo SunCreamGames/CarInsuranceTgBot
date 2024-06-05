@@ -23,11 +23,13 @@ namespace OpenAiClient
 
         public async Task Init()
         {
+            var msg = "You are chat-bot assistant for online creating car insurance policy. \r\nYou get instructions what to do on every request. Just guide client though pipeline friendly. Each step you will have instuctions how to do that. Do not start with this request. It's instructions only for future. Every next request should be responded as you are responding to client. So it gives instructions, how to communicate. Remember : You can't ask client questions like \"How can i help you?\" and other, just giving instructions and requests";
+            
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
                 new ChatCompletionCreateRequest()
                 {
                     Model = Gpt_4o,
-                    Messages = new List<ChatMessage>() { new ChatMessage("user", "\"Play the role of chat-bot assistant for online creating car insurance policy.\\nJust route client though pipeline friendly. Each step you will have instuctions how to do that. Do not ask client addiotional questions like \\\"How can i help you\\\" because he has only buttons-interface.\", ") }
+                    Messages = new List<ChatMessage>() { new ChatMessage("system", msg) }
                 },
                 modelId: "gpt-4o");
         }
@@ -47,65 +49,82 @@ namespace OpenAiClient
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
         public async Task<string> AskForPassport()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "Ask client for passport photo with good illumination and all fields visible",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = "Ask client for passport photo with good illumination and all fields visible";
 
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+               new ChatCompletionCreateRequest()
+               {
+                   Model = Gpt_4o,
+                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+               },
+               modelId: "gpt-4o");
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
         public async Task<string> AskForWaitWhileProcessing()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "He uploaded the photo. Ask to wait while photo is processing and data is extracting.",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = "He uploaded the photo. Ask to wait while photo is processing and data is extracting.";
+
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+               new ChatCompletionCreateRequest()
+               {
+                   Model = Gpt_4o,
+                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+               },
+               modelId: "gpt-4o");
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
         public async Task<string> AskForPassportApprove(PassportData data)
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = $"Ask if his data is right? \\r\\n\"Name\" : \"${data.Name}\"\r\n\"Id\" : \"{data.Id}\"\r\n",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = $"Ask if his data is right? \\r\\n\"Name\" : \"${data.Name}\"\r\n\"Id\" : \"{data.Id}\"\r\n";
+
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+                new ChatCompletionCreateRequest()
+                {
+                    Model = Gpt_4o,
+                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                },
+                modelId: "gpt-4o");
 
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
         public async Task<string> AskForPassportAgain()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "He disapproved data. Ask to re-upload another photo of passport. Accent on visibility and light",
-                Model = Gpt_3_5_Turbo
-            });
+
+            var msg = "He disapproved data. Ask to re-upload another photo of passport. Accent on visibility and light";
 
 
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+                new ChatCompletionCreateRequest()
+                {
+                    Model = Gpt_4o,
+                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                },
+                modelId: "gpt-4o");
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
 
@@ -113,108 +132,141 @@ namespace OpenAiClient
         public async Task<string> AskForVenichleId()
         {
 
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "Ask client for license plate photo with good illumination and all fields visible",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = "Ask client for license plate photo with good illumination and all fields visible";
 
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+new ChatCompletionCreateRequest()
+{
+    Model = Gpt_4o,
+    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+},
+modelId: "gpt-4o");
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
         public async Task<string> AskForVenichleIdAgain()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "He disapproved data. Ask to re-upload another photo of lisence plate. Accent on its visibility and light",
-                Model = Gpt_3_5_Turbo
-            });
+
+            var msg = "He disapproved data. Ask to re-upload another photo of lisence plate. Accent on its visibility and light";
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+                new ChatCompletionCreateRequest()
+                {
+                    Model = Gpt_4o,
+                    Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+                },
+                modelId: "gpt-4o");
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
         public async Task<string> AskForVenichleIdApprove(VeniclePlateData data)
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = $"Ask if his data is right? \r\n\"Id\" : \"{data.Id}\"\r\n",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = $"Ask if his data is right? \r\n\"Id\" : \"{data.Id}\"\r\n";
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+               new ChatCompletionCreateRequest()
+               {
+                   Model = Gpt_4o,
+                   Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+               },
+               modelId: "gpt-4o");
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
         public async Task<string> DocumentCoverText()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = $"We created and sended pdf of his car insurance policy, write some cover text like \"here is your insurance\", \"happy to help you\", \"come back again\", etc.",
-                Model = Gpt_3_5_Turbo
-            });
+            var msg = $"We created and sended pdf of his car insurance policy, write some cover text like \"here is your insurance\", \"happy to help you\", \"come back again\", etc.";
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+              new ChatCompletionCreateRequest()
+              {
+                  Model = Gpt_4o,
+                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+              },
+              modelId: "gpt-4o");
+
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
 
         public async Task<string> IncorrectInputHandle()
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = "User made incorrect input. friendly repeat your request.",
-                Model = Models.Gpt_3_5_Turbo
-            });
+
+            var msg = "User made incorrect input. friendly repeat your request.";
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+              new ChatCompletionCreateRequest()
+              {
+                  Model = Gpt_4o,
+                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+              },
+              modelId: "gpt-4o");
+
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
 
         public async Task<string> PriceAnnouncement(int price)
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = $"Announce, that creation of car insurance policy costs {price} usd.Ask if client agreee to that, if yes, ask to proceed payment with \"yes\" button, if no, ask to reject with \"no\"",
-                Model = Models.Gpt_3_5_Turbo
-            });
+            var msg = $"Announce, that creation of car insurance policy costs {price} usd.Ask if client agreee to that, if yes, ask to proceed payment with \"yes\" button, if no, ask to reject with \"no\"";
+
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+              new ChatCompletionCreateRequest()
+              {
+                  Model = Gpt_4o,
+                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+              },
+              modelId: "gpt-4o");
+
+
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
 
         }
 
         public async Task<string> RejectingPriceReaction(int price)
         {
-            var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-            {
-                Prompt = $"User rejected the price. Say sorry and explain, that ${price} is the only price we have. Ask him to come back if he will change his mind",
-                Model = Models.Gpt_3_5_Turbo
-            });
+            var msg = $"User rejected the price. Say sorry and explain, that ${price} is the only price we have. Ask him to come back if he will change his mind";
+
+            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
+              new ChatCompletionCreateRequest()
+              {
+                  Model = Gpt_4o,
+                  Messages = new List<ChatMessage>() { new ChatMessage("user", msg) }
+              },
+              modelId: "gpt-4o");
 
 
             if (!completionResult.Successful)
                 return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
 
-            return completionResult.Choices.First().Text;
+            return completionResult.Choices.First().Message.Content;
         }
     }
 }
