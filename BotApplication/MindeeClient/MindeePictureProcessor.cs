@@ -25,13 +25,19 @@ namespace MindeePictureProcessing
             var response = await mindeeClient
      .EnqueueAndParseAsync<InternationalIdV2>(input);
 
+            if (response.Document.Inference.Prediction.GivenNames.Count == 0 || response.Document.Inference.Prediction.GivenNames.All(x => string.IsNullOrEmpty(x.Value)))
+                throw new PictureProcessException("Couldn't recognize any name field");
 
-            var name = response.Document.Inference.Prediction.GivenNames.FirstOrDefault().Value;
+            var name = string.Join(' ', response.Document.Inference.Prediction.GivenNames.Select(x => x.Value));
+
+            if (string.IsNullOrEmpty(response.Document.Inference.Prediction.DocumentNumber.Value))
+                throw new PictureProcessException("Couldn't recognize any Id field");
+
             var id = response.Document.Inference.Prediction.DocumentNumber.Value;
             return new PassportData { Name = name, Id = id };
         }
 
-        public async Task<VenicleIdData> ProcessVenichleIdPicture(byte[] fileData)
+        public async Task<VeniclePlateData> ProcessVenichleIdPicture(byte[] fileData)
         {
             string apiKey = Environment.GetEnvironmentVariable("MindeeApiKey2");
 
@@ -42,8 +48,12 @@ namespace MindeePictureProcessing
             var response = await mindeeClient
                 .ParseAsync<LicensePlateV1>(input);
 
+            if (response.Document.Inference.Prediction.LicensePlates.Count == 0 || string.IsNullOrEmpty(response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value))
+                throw new PictureProcessException("Couldn't recognize any Id field");
+
             var id = response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value;
 
-            return new VenicleIdData { Id = id };
+            return new VeniclePlateData { Id = id };
         }
     }
+}

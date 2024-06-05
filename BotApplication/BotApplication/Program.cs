@@ -46,12 +46,12 @@ static IServiceProvider ConfigureServices()
 {
     var services = new ServiceCollection();
     //services.AddSingleton<IConversationAgent, MockConversationalAgent>();
-    services.AddSingleton<IPictureProcessor, MockPictureProcessor>();
-    services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
+    //services.AddSingleton<IPictureProcessor, MockPictureProcessor>();
+    //services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
 
     services.AddSingleton<IConversationAgent, OpenAiConversationalAgent>();
-    //services.AddSingleton<IPictureProcessor, MindeePictureProcessor>();
-    //services.AddSingleton<IPolicyGenerator, DummyPolicyGenerator>();
+    services.AddSingleton<IPictureProcessor, MindeePictureProcessor>();
+    services.AddSingleton<IPolicyGenerator, OpenAiPdfFileGenerator>();
 
     services.AddSingleton<ILogger, ConsoleLogger>();
     return services.BuildServiceProvider();
@@ -142,15 +142,14 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
         case ProcessStage.WaitingForPriceApprove:
             if (replyCommand == InlineReplies.Confirm)
             {
-                var policy = await policyGenerator.CreateNewPolicy(chatData.PassportData, chatData.VenicleIdData);
-
-                //var inputFile = await botClient.fil("dummy.pdf");
+                var policy = await policyGenerator.CreateNewPolicy(chatData.PassportData, chatData.VenicleIdData, 100);
 
                 var stream = new MemoryStream();
                 stream.Write(policy);
                 stream.Position = 0;
                 InputFileStream fs = new InputFileStream(stream, $"policy for {chatData.PassportData.Name}.pdf");
-                var send = await botClient.SendDocumentAsync(chatData.ChatId, fs);
+                await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.DocumentCoverText());
+                await botClient.SendDocumentAsync(chatData.ChatId, fs);
             }
             else
             {
@@ -245,7 +244,17 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
             destination: fileStream,
             cancellationToken: cancellationToken);
 
-        passportData = await picProcessAgent.ProcessPassportPicture(fileStream.GetBuffer());
+        try
+        {
+            passportData = await picProcessAgent.ProcessPassportPicture(fileStream.GetBuffer());
+        }
+        catch (PictureProcessException e)
+        {
+            await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
+            await botClient.SendTextMessageAsync(chatData.ChatId, "Try again, please");
+            // TODO : possibly develop 1 more method for IConversationalAgent in case if photo was rejected by mindee
+            return;
+        }
     }
     chatData.PassportData = passportData;
 
@@ -275,6 +284,18 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
             destination: fileStream,
             cancellationToken: cancellationToken);
 
+        try
+        {
+
+            venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
+        }
+        catch (PictureProcessException e)
+        {
+            await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
+            await botClient.SendTextMessageAsync(chatData.ChatId, "Try again, please");
+            // TODO : possibly develop 1 more method for IConversationalAgent in case if photo was rejected by mindee
+            return;
+        }
         venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
     }
     chatData.VenicleIdData = venichleIdData;
