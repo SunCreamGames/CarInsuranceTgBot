@@ -40,19 +40,7 @@ namespace MockRealiztions
             return Task.Run(() => $"Check if your venichle id data is ok. Id is {data.Id}");
         }
 
-        public Task<string> DocumentCoverText()
-        {
-            return Task.Run(() => "Here is your insurance policy docunent.");
-        }
-        public Task<string> FarewellFinish()
-        {
-            return Task.Run(() => "We were happy to help you. Hope you are satisfied with our service. Have a nice day!");
-        }
-        public Task<string> FarewellIncomplete()
-        {
-            return Task.Run(() => "Ok then. You can always come back to create an insurance policy dociument in case you will change your ming. Have a nice day!");
-        }
-
+      
         public Task<string> Greet()
         {
             return Task.Run(() => "Hello, this is the bot to create a car insurance policy document, using your passport and venichle id document.");

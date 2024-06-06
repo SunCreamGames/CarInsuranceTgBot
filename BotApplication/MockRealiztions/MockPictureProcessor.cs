@@ -14,8 +14,8 @@ namespace MockRealiztions
         {
             return Task.Run(() => new PassportData
             {
-                Name = "Name",
-                Id = "ID"
+                Name = "Vegabréf",
+                Id = "1234567"
             });
         }
 
@@ -23,7 +23,7 @@ namespace MockRealiztions
         {
             return Task.Run(() => new VeniclePlateData
             {
-                Id = "ID"
+                Id = "88448844"
             });
         }
     }

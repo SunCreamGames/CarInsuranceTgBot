@@ -25,14 +25,15 @@ ReceiverOptions receiverOptions = new()
     AllowedUpdates = Array.Empty<UpdateType>()
 };
 
+var logger = serviceProvider.GetRequiredService<ILogger>();
 var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
+var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
+
+
 await conversationalAgent.Init();
+await policyGenerator.InitTemplate();
 
-async Task ProcessInlineKeyboardAnswer(string arg1, string? arg2, bool? nullable1, string? arg4, int? nullable2, CancellationToken token)
-{
-    throw new NotImplementedException();
-}
-
+logger.LogMessage("Bot started");
 botClient.StartReceiving(
     updateHandler: HandleUpdateAsync,
     pollingErrorHandler: HandlePollingErrorAsync,
@@ -97,8 +98,10 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
 {
     bool parsingSuccess = Enum.TryParse(typeof(InlineReplies), callBack.Data, out var commandId);
     if (!parsingSuccess)
+    {
+        logger.LogError($"Could not parse callback data to inline replies. Callback data : {callBack.Data}");
         throw new Exception($"Could not parse callback data to inline replies. Callback data : {callBack.Data}");
-
+    }
     var replyCommand = (InlineReplies)commandId;
 
     var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
@@ -142,20 +145,30 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
         case ProcessStage.WaitingForPriceApprove:
             if (replyCommand == InlineReplies.Confirm)
             {
-                var policy = await policyGenerator.CreateNewPolicy(chatData.PassportData, chatData.VenicleIdData, 100);
+                try
+                {
+                    var policy = await policyGenerator.CreateNewPolicy(chatData.PassportData, chatData.VenicleIdData, 100);
 
-                var stream = new MemoryStream();
-                stream.Write(policy);
-                stream.Position = 0;
-                InputFileStream fs = new InputFileStream(stream, $"policy for {chatData.PassportData.Name}.pdf");
-                await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.DocumentCoverText());
-                await botClient.SendDocumentAsync(chatData.ChatId, fs);
+                    var stream = new MemoryStream();
+                    stream.Write(policy);
+                    stream.Position = 0;
+                    InputFileStream fs = new InputFileStream(stream, $"policy for {chatData.PassportData.Name}.pdf");
+                    await botClient.SendDocumentAsync(chatData.ChatId, fs);
+                    chatData.Stage = ProcessStage.Start;
+                }
+                catch (Exception e)
+                {
+                    await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
+
+                }
             }
             else
             {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
 await conversationalAgent.RejectingPriceReaction(100));
+                chatData.Stage = ProcessStage.Start;
+
             }
             break;
         default: return;
@@ -178,16 +191,17 @@ async Task ProcessCurrentStep(ChatData chatData, Message msg, ITelegramBotClient
             break;
 
         case ProcessStage.WaitingForPassportPhoto:
-            await ProcessPassportPhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, cancellationToken);
+            await ProcessPassportPhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, logger, cancellationToken);
             break;
 
         case ProcessStage.WaitingForPassportDataApprove:
+
             await ReAskForPassportDataApprove(chatData, botClient, conversationalAgent);
             // Asking for approve in case user send anything but not using buttons "Yes/No". Resend the question and buttons
             break;
 
         case ProcessStage.WaitingForVenichleIdPhoto:
-            await ProcessVenichleIdPhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, cancellationToken);
+            await ProcessVenichleIdPhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, logger, cancellationToken);
             break;
 
         case ProcessStage.WaitingForVenichleIdDataApprove:
@@ -203,7 +217,6 @@ async Task ProcessCurrentStep(ChatData chatData, Message msg, ITelegramBotClient
 }
 Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
 {
-    var logger = serviceProvider.GetRequiredService<ILogger>();
     var ErrorMessage = exception switch
     {
         ApiRequestException apiRequestException
@@ -222,14 +235,18 @@ static async Task BotStartConversation(ChatData chatData, ITelegramBotClient bot
     await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForPassport());
     chatData.Stage = ProcessStage.WaitingForPassportPhoto;
 }
-static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, CancellationToken cancellationToken)
+static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, ILogger logger, CancellationToken cancellationToken)
 {
+
     if (msg.Photo == null)
     {
         await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.IncorrectInputHandle());
         await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForPassport());
         return;
     } // TODO : Change errors to more conditional depends on stage.
+
+    await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForWaitWhileProcessing());
+
 
     var photoId = msg.Photo.Last().FileId;
 
@@ -250,8 +267,9 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
         }
         catch (PictureProcessException e)
         {
+            logger.LogError(e.Message);
             await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
-            await botClient.SendTextMessageAsync(chatData.ChatId, "Try again, please");
+            await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForPassportAgain());
             // TODO : possibly develop 1 more method for IConversationalAgent in case if photo was rejected by mindee
             return;
         }
@@ -262,7 +280,7 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
 
     chatData.Stage = ProcessStage.WaitingForPassportDataApprove;
 }
-static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, CancellationToken cancellationToken)
+static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, ILogger logger, CancellationToken cancellationToken)
 {
     if (msg.Photo == null)
     {
@@ -270,6 +288,8 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
         await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForVenichleId());
         return;
     } // TODO : Change errors to more conditional depends on stage.
+
+    await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForWaitWhileProcessing());
 
     var photoId = msg.Photo.Last().FileId;
 
@@ -286,17 +306,16 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
 
         try
         {
-
             venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
         }
         catch (PictureProcessException e)
         {
+            logger.LogError(e.Message);
             await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
-            await botClient.SendTextMessageAsync(chatData.ChatId, "Try again, please");
+            await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForVenichleIdAgain());
             // TODO : possibly develop 1 more method for IConversationalAgent in case if photo was rejected by mindee
             return;
         }
-        venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
     }
     chatData.VenicleIdData = venichleIdData;
 

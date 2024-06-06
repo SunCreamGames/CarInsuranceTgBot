@@ -23,7 +23,7 @@ namespace MindeePictureProcessing
             var input = new LocalInputSource(fileData, "plate_photo.jpg");
 
             var response = await mindeeClient
-     .EnqueueAndParseAsync<InternationalIdV2>(input);
+     .EnqueueAndParseAsync<InternationalIdV1>(input);
 
             if (response.Document.Inference.Prediction.GivenNames.Count == 0 || response.Document.Inference.Prediction.GivenNames.All(x => string.IsNullOrEmpty(x.Value)))
                 throw new PictureProcessException("Couldn't recognize any name field");

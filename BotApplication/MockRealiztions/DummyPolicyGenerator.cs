@@ -10,6 +10,11 @@ namespace MockRealiztions
 {
     public class DummyPolicyGenerator : IPolicyGenerator
     {
+        public Task InitTemplate()
+        {
+            return Task.CompletedTask;
+        }
+
         Task<byte[]> IPolicyGenerator.CreateNewPolicy(PassportData passportData, VeniclePlateData venicleIdData, int price)
         {
 

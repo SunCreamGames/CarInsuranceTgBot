@@ -20,7 +20,6 @@ namespace Domain.Contracts
         Task<string> AskForVenichleIdAgain();
         Task<string> PriceAnnouncement(int price);
         Task<string> RejectingPriceReaction(int price);
-        Task<string> DocumentCoverText();
         Task<string> IncorrectInputHandle();
     }
 }

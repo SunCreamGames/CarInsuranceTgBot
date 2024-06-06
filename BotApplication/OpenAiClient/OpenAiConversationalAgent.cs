@@ -111,7 +111,7 @@ namespace OpenAiClient
         public async Task<string> AskForPassportAgain()
         {
 
-            var msg = "He disapproved data. Ask to re-upload another photo of passport. Accent on visibility and light";
+            var msg = "Data extracted from photo wasn't correct. Ask to re-upload another photo of passport. Accent on visibility and light";
 
 
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
@@ -152,7 +152,7 @@ modelId: "gpt-4o");
         public async Task<string> AskForVenichleIdAgain()
         {
 
-            var msg = "He disapproved data. Ask to re-upload another photo of lisence plate. Accent on its visibility and light";
+            var msg = "Data extracted from photo wasn't correct. Ask to re-upload another photo of lisence plate. Accent on its visibility and light";
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(
                 new ChatCompletionCreateRequest()
                 {
@@ -179,26 +179,6 @@ modelId: "gpt-4o");
                    Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
                },
                modelId: "gpt-4o");
-
-
-            if (!completionResult.Successful)
-                return $"Seems we have some problem with our conversational API. Try to contact developers or make attepmt later. Error : {completionResult.Error.Message}";
-
-            return completionResult.Choices.First().Message.Content;
-        }
-
-        public async Task<string> DocumentCoverText()
-        {
-            var msg = $"We created and sended pdf of his car insurance policy, write some cover text like \"here is your insurance\", \"happy to help you\", \"come back again\", etc.";
-
-            var completionResult = await openAiService.ChatCompletion.CreateCompletion(
-              new ChatCompletionCreateRequest()
-              {
-                  Model = Gpt_4o,
-                  Messages = new List<ChatMessage>() { new ChatMessage("system", systemMsg), new ChatMessage("user", msg) }
-              },
-              modelId: "gpt-4o");
-
 
 
             if (!completionResult.Successful)

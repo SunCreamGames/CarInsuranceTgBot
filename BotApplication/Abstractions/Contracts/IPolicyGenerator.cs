@@ -9,6 +9,7 @@ namespace Domain.Contracts
 {
     public interface IPolicyGenerator
     {
+        Task InitTemplate();
         Task<byte[]> CreateNewPolicy(PassportData passportData, VeniclePlateData venicleIdData, int price);
     }
 }
