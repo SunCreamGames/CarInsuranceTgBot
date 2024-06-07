@@ -41,7 +41,7 @@ namespace OpenAiClient
             if (HtmlTemplate.Substring(0, 4).ToLower() == "html")
                 HtmlTemplate = HtmlTemplate.Substring(4);
         }
-        public async Task<byte[]> CreateNewPolicy(PassportData passportData, VeniclePlateData venicleIdData, int price)
+        public async Task<byte[]> CreateNewPolicy(PassportData passportData, LicensePlateData venicleIdData, int price)
         {
 
             var htmlRes = HtmlTemplate.Replace("[FakeName]", passportData.Name);

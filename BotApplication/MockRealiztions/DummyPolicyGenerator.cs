@@ -15,7 +15,7 @@ namespace MockRealiztions
             return Task.CompletedTask;
         }
 
-        Task<byte[]> IPolicyGenerator.CreateNewPolicy(PassportData passportData, VeniclePlateData venicleIdData, int price)
+        Task<byte[]> IPolicyGenerator.CreateNewPolicy(PassportData passportData, LicensePlateData venicleIdData, int price)
         {
 
             return Task.Run(() => File.ReadAllBytes("dummy.pdf"));

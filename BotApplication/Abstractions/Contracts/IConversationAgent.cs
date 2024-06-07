@@ -15,9 +15,9 @@ namespace Domain.Contracts
         Task<string> AskForPassportApprove(PassportData data);
         Task<string> AskForWaitWhileProcessing();
         Task<string> AskForPassportAgain();
-        Task<string> AskForVenichleId();
-        Task<string> AskForVenichleIdApprove(VeniclePlateData data);
-        Task<string> AskForVenichleIdAgain();
+        Task<string> AskForLicensePlateId();
+        Task<string> AskForLicensePlateIdApprove(LicensePlateData data);
+        Task<string> AskForLicensePlateIdAgain();
         Task<string> PriceAnnouncement(int price);
         Task<string> RejectingPriceReaction(int price);
         Task<string> IncorrectInputHandle();

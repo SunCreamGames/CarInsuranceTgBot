@@ -25,25 +25,25 @@ namespace MockRealiztions
             return Task.Run(() => $"Check if your passport data is ok. Name is {data.Name}. Id is {data.Id}");
         }
 
-        public Task<string> AskForVenichleId()
+        public Task<string> AskForLicensePlateId()
         {
-            return Task.Run(() => "Provide your venichle id photo, please");
+            return Task.Run(() => "Provide your license plate photo, please");
         }
 
-        public Task<string> AskForVenichleIdAgain()
+        public Task<string> AskForLicensePlateIdAgain()
         {
-            return Task.Run(() => "Provide your venichle id photo one more time, please");
+            return Task.Run(() => "Provide your license plate photo one more time, please");
         }
 
-        public Task<string> AskForVenichleIdApprove(VeniclePlateData data)
+        public Task<string> AskForLicensePlateIdApprove(LicensePlateData data)
         {
-            return Task.Run(() => $"Check if your venichle id data is ok. Id is {data.Id}");
+            return Task.Run(() => $"Check if your vlicense plate data is ok. Id is {data.Id}");
         }
 
       
         public Task<string> Greet()
         {
-            return Task.Run(() => "Hello, this is the bot to create a car insurance policy document, using your passport and venichle id document.");
+            return Task.Run(() => "Hello, this is the bot to create a car insurance policy document, using your passport and license plate id.");
         }
 
         public Task<string> PriceAnnouncement(int price)

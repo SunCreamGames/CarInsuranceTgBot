@@ -11,19 +11,24 @@ namespace MindeePictureProcessing
 {
     public class MindeePictureProcessor : IPictureProcessor
     {
-
+        string apiKey; // Actually we can use only one api-key.
+                       // but free mindee account give us only 1-type of document,
+                       // so I used 2 mindee free accounts there
         public async Task<PassportData> ProcessPassportPicture(byte[] fileData)
         {
 
-            string apiKey = Environment.GetEnvironmentVariable("MindeeApiKey1");
-            
-            
+            apiKey = Environment.GetEnvironmentVariable("MindeeApiKey1");
+
+
             MindeeClient mindeeClient = new MindeeClient(apiKey);
 
             var input = new LocalInputSource(fileData, "plate_photo.jpg");
 
             var response = await mindeeClient
      .EnqueueAndParseAsync<InternationalIdV1>(input);
+
+            if (response.ApiRequest.StatusCode != 200)
+                throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
 
             if (response.Document.Inference.Prediction.GivenNames.Count == 0 || response.Document.Inference.Prediction.GivenNames.All(x => string.IsNullOrEmpty(x.Value)))
                 throw new PictureProcessException("Couldn't recognize any name field");
@@ -37,9 +42,9 @@ namespace MindeePictureProcessing
             return new PassportData { Name = name, Id = id };
         }
 
-        public async Task<VeniclePlateData> ProcessVenichleIdPicture(byte[] fileData)
+        public async Task<LicensePlateData> ProcessLicensePlatePicture(byte[] fileData)
         {
-            string apiKey = Environment.GetEnvironmentVariable("MindeeApiKey2");
+            apiKey = Environment.GetEnvironmentVariable("MindeeApiKey2");
 
             MindeeClient mindeeClient = new MindeeClient(apiKey);
 
@@ -47,13 +52,16 @@ namespace MindeePictureProcessing
 
             var response = await mindeeClient
                 .ParseAsync<LicensePlateV1>(input);
+            
+            if (response.ApiRequest.StatusCode != 200)
+                throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
 
             if (response.Document.Inference.Prediction.LicensePlates.Count == 0 || string.IsNullOrEmpty(response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value))
                 throw new PictureProcessException("Couldn't recognize any Id field");
 
             var id = response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value;
 
-            return new VeniclePlateData { Id = id };
+            return new LicensePlateData { Id = id };
         }
     }
 }

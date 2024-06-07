@@ -130,7 +130,7 @@ namespace OpenAiClient
 
 
 
-        public async Task<string> AskForVenichleId()
+        public async Task<string> AskForLicensePlateId()
         {
 
             var msg = "Ask client for license plate photo with good illumination and all fields visible";
@@ -149,7 +149,7 @@ modelId: "gpt-4o");
             return completionResult.Choices.First().Message.Content;
         }
 
-        public async Task<string> AskForVenichleIdAgain()
+        public async Task<string> AskForLicensePlateIdAgain()
         {
 
             var msg = "Data extracted from photo wasn't correct. Ask to re-upload another photo of lisence plate. Accent on its visibility and light";
@@ -168,7 +168,7 @@ modelId: "gpt-4o");
             return completionResult.Choices.First().Message.Content;
         }
 
-        public async Task<string> AskForVenichleIdApprove(VeniclePlateData data)
+        public async Task<string> AskForLicensePlateIdApprove(LicensePlateData data)
         {
             var msg = $"Ask if his data is right? \r\n\"Id\" : \"{data.Id}\"\r\n";
 

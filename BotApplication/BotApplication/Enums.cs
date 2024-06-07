@@ -11,8 +11,8 @@ namespace BotApplication
         Start,
         WaitingForPassportPhoto,
         WaitingForPassportDataApprove,
-        WaitingForVenichleIdPhoto,
-        WaitingForVenichleIdDataApprove,
+        WaitingForLicensePlatePhoto,
+        WaitingForLicensePlateDataApprove,
         WaitingForPriceApprove,
     }
     public enum InlineReplies

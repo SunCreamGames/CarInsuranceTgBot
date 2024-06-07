@@ -19,9 +19,9 @@ namespace MockRealiztions
             });
         }
 
-        public Task<VeniclePlateData> ProcessVenichleIdPicture(byte[] someData)
+        public Task<LicensePlateData> ProcessLicensePlatePicture(byte[] someData)
         {
-            return Task.Run(() => new VeniclePlateData
+            return Task.Run(() => new LicensePlateData
             {
                 Id = "88448844"
             });

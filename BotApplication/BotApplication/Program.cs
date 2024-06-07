@@ -12,20 +12,25 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-var botId = Environment.GetEnvironmentVariable("BotToken");
 
 var serviceProvider = ConfigureServices();
 
+var logger = serviceProvider.GetRequiredService<ILogger>();
+logger.LogMessage("Bot starting");
+
+
+var botId = Environment.GetEnvironmentVariable("BotToken");
 var botClient = new TelegramBotClient(botId);
+
 using CancellationTokenSource cts = new();
 
 var chats = new Dictionary<long, ChatData>();
+
 ReceiverOptions receiverOptions = new()
 {
     AllowedUpdates = Array.Empty<UpdateType>()
 };
 
-var logger = serviceProvider.GetRequiredService<ILogger>();
 var conversationalAgent = serviceProvider.GetRequiredService<IConversationAgent>();
 var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
 
@@ -33,7 +38,7 @@ var policyGenerator = serviceProvider.GetRequiredService<IPolicyGenerator>();
 await conversationalAgent.Init();
 await policyGenerator.InitTemplate();
 
-logger.LogMessage("Bot started");
+logger.LogMessage("Bot started listening");
 botClient.StartReceiving(
     updateHandler: HandleUpdateAsync,
     pollingErrorHandler: HandlePollingErrorAsync,
@@ -41,7 +46,6 @@ botClient.StartReceiving(
     cancellationToken: cts.Token
 );
 Console.ReadLine();
-
 
 static IServiceProvider ConfigureServices()
 {
@@ -78,9 +82,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         return;
     }
 
-    chatId = update.Message.Chat.Id;
     if (msg == null)
         return;
+
+    chatId = msg.Chat.Id;
 
 
     if (!chats.ContainsKey(chatId))
@@ -114,10 +119,10 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
         case ProcessStage.WaitingForPassportDataApprove:
             if (replyCommand == InlineReplies.Confirm)
             {
-                chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
+                chatData.Stage = ProcessStage.WaitingForLicensePlatePhoto;
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                   await conversationalAgent.AskForVenichleId());
+                   await conversationalAgent.AskForLicensePlateId());
             }
             else
             {
@@ -127,7 +132,7 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
                 chatData.Stage = ProcessStage.WaitingForPassportPhoto;
             }
             break;
-        case ProcessStage.WaitingForVenichleIdDataApprove:
+        case ProcessStage.WaitingForLicensePlateDataApprove:
             if (replyCommand == InlineReplies.Confirm)
             {
                 chatData.Stage = ProcessStage.WaitingForPriceApprove;
@@ -137,8 +142,8 @@ async Task ProcessButtonReply(ChatData chatData, CallbackQuery callBack, ITelegr
             {
                 await botClient.SendTextMessageAsync(
                     chatData.ChatId,
-                   await conversationalAgent.AskForVenichleIdAgain());
-                chatData.Stage = ProcessStage.WaitingForVenichleIdPhoto;
+                   await conversationalAgent.AskForLicensePlateIdAgain());
+                chatData.Stage = ProcessStage.WaitingForLicensePlatePhoto;
 
             }
             break;
@@ -200,12 +205,12 @@ async Task ProcessCurrentStep(ChatData chatData, Message msg, ITelegramBotClient
             // Asking for approve in case user send anything but not using buttons "Yes/No". Resend the question and buttons
             break;
 
-        case ProcessStage.WaitingForVenichleIdPhoto:
-            await ProcessVenichleIdPhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, logger, cancellationToken);
+        case ProcessStage.WaitingForLicensePlatePhoto:
+            await ProcessLicensePlatePhoto(chatData, msg, botClient, conversationalAgent, picProcessAgent, logger, cancellationToken);
             break;
 
-        case ProcessStage.WaitingForVenichleIdDataApprove:
-            await ReAskForVenichleIdDataApprove(chatData, botClient, conversationalAgent);
+        case ProcessStage.WaitingForLicensePlateDataApprove:
+            await ReAskForLicensePlateDataApprove(chatData, botClient, conversationalAgent);
             // Asking for approve in case user send anything but not using buttons "Yes/No". Resend the question and buttons
             break;
 
@@ -280,12 +285,12 @@ static async Task ProcessPassportPhoto(ChatData chatData, Message msg, ITelegram
 
     chatData.Stage = ProcessStage.WaitingForPassportDataApprove;
 }
-static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, ILogger logger, CancellationToken cancellationToken)
+static async Task ProcessLicensePlatePhoto(ChatData chatData, Message msg, ITelegramBotClient botClient, IConversationAgent conversationalAgent, IPictureProcessor picProcessAgent, ILogger logger, CancellationToken cancellationToken)
 {
     if (msg.Photo == null)
     {
         await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.IncorrectInputHandle());
-        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForVenichleId());
+        await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForLicensePlateId());
         return;
     } // TODO : Change errors to more conditional depends on stage.
 
@@ -296,7 +301,7 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
     var fileInfo = await botClient.GetFileAsync(photoId);
     var path = fileInfo.FilePath;
 
-    VeniclePlateData venichleIdData;
+    LicensePlateData licensePlateData;
     using (var fileStream = new MemoryStream())
     {
         await botClient.DownloadFileAsync(
@@ -306,22 +311,22 @@ static async Task ProcessVenichleIdPhoto(ChatData chatData, Message msg, ITelegr
 
         try
         {
-            venichleIdData = await picProcessAgent.ProcessVenichleIdPicture(fileStream.GetBuffer());
+            licensePlateData = await picProcessAgent.ProcessLicensePlatePicture(fileStream.GetBuffer());
         }
         catch (PictureProcessException e)
         {
             logger.LogError(e.Message);
             await botClient.SendTextMessageAsync(chatData.ChatId, e.Message);
-            await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForVenichleIdAgain());
+            await botClient.SendTextMessageAsync(chatData.ChatId, await conversationalAgent.AskForLicensePlateIdAgain());
             // TODO : possibly develop 1 more method for IConversationalAgent in case if photo was rejected by mindee
             return;
         }
     }
-    chatData.VenicleIdData = venichleIdData;
+    chatData.VenicleIdData = licensePlateData;
 
-    await AskGeneric(chatData.ChatId, botClient, await conversationalAgent.AskForVenichleIdApprove(venichleIdData));
+    await AskGeneric(chatData.ChatId, botClient, await conversationalAgent.AskForLicensePlateIdApprove(licensePlateData));
 
-    chatData.Stage = ProcessStage.WaitingForVenichleIdDataApprove;
+    chatData.Stage = ProcessStage.WaitingForLicensePlateDataApprove;
 }
 
 static async Task ReAskForPassportDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
@@ -330,10 +335,10 @@ static async Task ReAskForPassportDataApprove(ChatData chatData, ITelegramBotCli
     var reAskText = await conversationalAgent.AskForPassportApprove(chatData.PassportData);
     await ReAskGeneric(chatData.ChatId, botClient, errorText, reAskText);
 }
-static async Task ReAskForVenichleIdDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
+static async Task ReAskForLicensePlateDataApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)
 {
     var errorText = await conversationalAgent.IncorrectInputHandle();
-    var reAskText = await conversationalAgent.AskForVenichleIdApprove(chatData.VenicleIdData);
+    var reAskText = await conversationalAgent.AskForLicensePlateIdApprove(chatData.VenicleIdData);
     await ReAskGeneric(chatData.ChatId, botClient, errorText, reAskText);
 }
 static async Task ReAskForPriceApprove(ChatData chatData, ITelegramBotClient botClient, IConversationAgent conversationalAgent)

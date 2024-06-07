@@ -1,6 +1,6 @@
 ﻿namespace Domain.Data
 {
-    public class VeniclePlateData
+    public class LicensePlateData
     {
         public string Id { get; set; }
     }
