@@ -90,7 +90,7 @@ namespace OpenAiClient
         }
         public async Task<string> AskForPassportApprove(PassportData data)
         {
-            var msg = $"Ask if his data is right? \\r\\n\"Name\" : \"${data.Name}\"\r\n\"Id\" : \"{data.Id}\"\r\n";
+            var msg = $"Ask if his data is right? \\r\\n\"Name\" : \"{data.Name}\"\r\n\"Id\" : \"{data.Id}\"\r\n";
 
 
             var completionResult = await openAiService.ChatCompletion.CreateCompletion(

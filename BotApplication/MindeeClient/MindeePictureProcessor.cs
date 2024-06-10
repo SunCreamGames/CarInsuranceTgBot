@@ -22,24 +22,31 @@ namespace MindeePictureProcessing
 
             MindeeClient mindeeClient = new MindeeClient(apiKey);
 
-            var input = new LocalInputSource(fileData, "plate_photo.jpg");
+            var input = new LocalInputSource(fileData, "passport_photo.jpg");
 
-            var response = await mindeeClient
-     .EnqueueAndParseAsync<InternationalIdV1>(input);
+            try
+            {
+                var response = await mindeeClient
+             .EnqueueAndParseAsync<InternationalIdV1>(input);
 
-            if (response.ApiRequest.StatusCode != 200)
+                if (response.ApiRequest.StatusCode > 400)
+                    throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
+
+                if (response.Document.Inference.Prediction.GivenNames.Count == 0 || response.Document.Inference.Prediction.GivenNames.All(x => string.IsNullOrEmpty(x.Value)))
+                    throw new PictureProcessException("Couldn't recognize any name field");
+
+                var name = string.Join(' ', response.Document.Inference.Prediction.GivenNames.Select(x => x.Value));
+
+                if (string.IsNullOrEmpty(response.Document.Inference.Prediction.DocumentNumber.Value))
+                    throw new PictureProcessException("Couldn't recognize any Id field");
+
+                var id = response.Document.Inference.Prediction.DocumentNumber.Value;
+                return new PassportData { Name = name, Id = id };
+            }
+            catch
+            {
                 throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
-
-            if (response.Document.Inference.Prediction.GivenNames.Count == 0 || response.Document.Inference.Prediction.GivenNames.All(x => string.IsNullOrEmpty(x.Value)))
-                throw new PictureProcessException("Couldn't recognize any name field");
-
-            var name = string.Join(' ', response.Document.Inference.Prediction.GivenNames.Select(x => x.Value));
-
-            if (string.IsNullOrEmpty(response.Document.Inference.Prediction.DocumentNumber.Value))
-                throw new PictureProcessException("Couldn't recognize any Id field");
-
-            var id = response.Document.Inference.Prediction.DocumentNumber.Value;
-            return new PassportData { Name = name, Id = id };
+            }
         }
 
         public async Task<LicensePlateData> ProcessLicensePlatePicture(byte[] fileData)
@@ -50,18 +57,25 @@ namespace MindeePictureProcessing
 
             var input = new LocalInputSource(fileData, "plate_photo.jpg");
 
-            var response = await mindeeClient
-                .ParseAsync<LicensePlateV1>(input);
-            
-            if (response.ApiRequest.StatusCode != 200)
+            try
+            {
+                var response = await mindeeClient
+                    .ParseAsync<LicensePlateV1>(input);
+
+                if (response.ApiRequest.StatusCode > 400)
+                    throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
+
+                if (response.Document.Inference.Prediction.LicensePlates.Count == 0 || string.IsNullOrEmpty(response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value))
+                    throw new PictureProcessException("Couldn't recognize any Id field");
+
+                var id = response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value;
+
+                return new LicensePlateData { Id = id };
+            }
+            catch
+            {
                 throw new PictureProcessException("Seems like we have some issues with our picture processing API. Try again later or contact our developers, please");
-
-            if (response.Document.Inference.Prediction.LicensePlates.Count == 0 || string.IsNullOrEmpty(response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value))
-                throw new PictureProcessException("Couldn't recognize any Id field");
-
-            var id = response.Document.Inference.Prediction.LicensePlates.FirstOrDefault().Value;
-
-            return new LicensePlateData { Id = id };
+            }
         }
     }
 }
